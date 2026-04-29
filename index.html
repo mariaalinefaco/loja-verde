@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Loja Verde">
+<meta name="theme-color" content="#1D9E75">
+<title>Loja Verde — Gestão de Estoque</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --green: #1D9E75;
+  --green-dark: #0F6E56;
+  --green-light: #E1F5EE;
+  --green-text: #085041;
+  --amber: #EF9F27;
+  --amber-light: #FAEEDA;
+  --amber-text: #633806;
+  --red: #E24B4A;
+  --red-light: #FCEBEB;
+  --red-text: #791F1F;
+  --purple: #7F77DD;
+  --purple-light: #EEEDFE;
+  --purple-text: #3C3489;
+  --blue-light: #E6F1FB;
+  --blue-text: #0C447C;
+  --bg: #F8F7F4;
+  --surface: #FFFFFF;
+  --border: rgba(0,0,0,0.08);
+  --border-md: rgba(0,0,0,0.14);
+  --text: #1A1A18;
+  --text-2: #6B6B68;
+  --text-3: #A0A09C;
+  --radius: 10px;
+  --radius-lg: 14px;
+  --font: 'DM Sans', sans-serif;
+  --mono: 'DM Mono', monospace;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+body { font-family: var(--font); background: var(--bg); color: var(--text); min-height: 100vh; }
+
+/* LAYOUT */
+.app { max-width: 480px; margin: 0 auto; min-height: 100vh; display: flex; flex-direction: column; }
+.topbar { background: var(--surface); border-bottom: 1px solid var(--border); padding: 14px 16px 12px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
+.logo { display: flex; align-items: center; gap: 8px; }
+.logo-icon { width: 30px; height: 30px; background: var(--green); border-radius: 8px; display: flex; align-items: center; justify-content: center; }
+.logo-icon svg { width: 16px; height: 16px; fill: white; }
+.logo-text { font-size: 15px; font-weight: 600; color: var(--text); }
+.logo-sub { font-size: 11px; color: var(--text-2); margin-top: 0px; }
+.notif-pill { background: var(--red-light); color: var(--red-text); font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 20px; }
+
+/* BOTTOM NAV */
+.bottom-nav { background: var(--surface); border-top: 1px solid var(--border); display: flex; position: sticky; bottom: 0; z-index: 100; }
+.nav-item { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 10px 4px 12px; cursor: pointer; border: none; background: transparent; color: var(--text-2); font-family: var(--font); font-size: 10px; transition: color 0.15s; }
+.nav-item.active { color: var(--green); }
+.nav-item svg { width: 20px; height: 20px; }
+.nav-badge { position: absolute; top: 6px; right: calc(50% - 18px); background: var(--red); color: white; font-size: 9px; font-weight: 600; width: 14px; height: 14px; border-radius: 7px; display: flex; align-items: center; justify-content: center; }
+.nav-item-wrap { position: relative; }
+
+/* CONTENT */
+.content { flex: 1; overflow-y: auto; padding: 16px; }
+.screen { display: none; }
+.screen.active { display: block; }
+
+/* CARDS */
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 14px 16px; margin-bottom: 10px; }
+.card-title { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 10px; }
+
+/* SECTION LABEL */
+.sec { font-size: 10px; font-weight: 600; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.06em; margin: 14px 0 7px; }
+
+/* METRICS GRID */
+.metrics { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-bottom: 14px; }
+.metrics-4 { grid-template-columns: repeat(4, 1fr); }
+.met { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px; text-align: center; }
+.met-n { font-size: 22px; font-weight: 600; font-family: var(--mono); color: var(--text); line-height: 1; }
+.met-l { font-size: 11px; color: var(--text-2); margin-top: 4px; }
+
+/* ALERT CARDS */
+.alert { border-radius: var(--radius); padding: 12px 14px; margin-bottom: 8px; border: 1px solid; }
+.alert-r { background: var(--red-light); border-color: #F7C1C1; }
+.alert-a { background: var(--amber-light); border-color: #FAC775; }
+.alert-g { background: var(--green-light); border-color: #9FE1CB; }
+.alert-r .a-title { font-size: 13px; font-weight: 600; color: var(--red-text); }
+.alert-a .a-title { font-size: 13px; font-weight: 600; color: var(--amber-text); }
+.alert-g .a-title { font-size: 13px; font-weight: 600; color: var(--green-text); }
+.alert-r .a-sub { font-size: 12px; color: #A32D2D; margin-top: 2px; }
+.alert-a .a-sub { font-size: 12px; color: #854F0B; margin-top: 2px; }
+.alert-g .a-sub { font-size: 12px; color: var(--green-text); margin-top: 2px; }
+.alert-head { display: flex; justify-content: space-between; align-items: flex-start; }
+
+/* BADGES */
+.badge { display: inline-block; font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 6px; white-space: nowrap; font-family: var(--mono); }
+.b-r { background: var(--red-light); color: var(--red-text); }
+.b-a { background: var(--amber-light); color: var(--amber-text); }
+.b-g { background: var(--green-light); color: var(--green-text); }
+.b-p { background: var(--purple-light); color: var(--purple-text); }
+.b-b { background: var(--blue-light); color: var(--blue-text); }
+
+/* ROWS */
+.row { display: flex; align-items: center; gap: 8px; padding: 10px 0; border-bottom: 1px solid var(--border); }
+.row:last-child { border-bottom: none; }
+.row-name { font-size: 13px; font-weight: 500; color: var(--text); flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.row-sub { font-size: 11px; color: var(--text-2); margin-top: 1px; }
+
+/* FORM */
+label { font-size: 12px; color: var(--text-2); display: block; margin-bottom: 4px; font-weight: 500; }
+input, select, textarea { width: 100%; font-family: var(--font); font-size: 14px; padding: 10px 12px; border: 1px solid var(--border-md); border-radius: var(--radius); background: var(--bg); color: var(--text); outline: none; transition: border-color 0.15s; }
+input:focus, select:focus, textarea:focus { border-color: var(--green); background: white; }
+.form-row { margin-bottom: 12px; }
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+
+/* BUTTONS */
+.btn-green { background: var(--green); color: white; border: none; border-radius: var(--radius); padding: 12px 18px; font-size: 14px; font-weight: 600; font-family: var(--font); cursor: pointer; width: 100%; transition: background 0.15s; }
+.btn-green:hover { background: var(--green-dark); }
+.btn-outline { background: transparent; border: 1px solid var(--border-md); border-radius: var(--radius); padding: 9px 14px; font-size: 13px; font-family: var(--font); cursor: pointer; color: var(--text); transition: background 0.15s; }
+.btn-outline:hover { background: var(--bg); }
+
+/* QTY CONTROLS */
+.qty-wrap { display: flex; align-items: center; gap: 5px; }
+.qty-btn { width: 28px; height: 28px; border-radius: 8px; border: 1px solid var(--border-md); background: var(--bg); cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center; color: var(--text); flex-shrink: 0; }
+.qty-in { width: 44px; text-align: center; padding: 6px 4px; font-size: 13px; font-family: var(--mono); }
+
+/* QUICK ACTIONS */
+.quick-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 4px; }
+.quick-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 14px; cursor: pointer; transition: background 0.1s; }
+.quick-card:hover { background: var(--bg); }
+.quick-icon { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; margin-bottom: 8px; }
+.quick-title { font-size: 13px; font-weight: 600; color: var(--text); }
+.quick-sub { font-size: 11px; color: var(--text-2); margin-top: 2px; }
+
+/* BAR */
+.bar-wrap { flex: 1; height: 4px; background: var(--border); border-radius: 2px; overflow: hidden; min-width: 40px; }
+.bar-fill { height: 100%; border-radius: 2px; }
+
+/* CHAT */
+.chat-area { background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 12px; margin-bottom: 10px; min-height: 260px; display: flex; flex-direction: column; gap: 10px; }
+.msg-wrap-ai { display: flex; flex-direction: column; align-items: flex-start; }
+.msg-wrap-user { display: flex; flex-direction: column; align-items: flex-end; }
+.msg-label { font-size: 10px; color: var(--text-3); margin-bottom: 3px; }
+.msg { padding: 10px 13px; border-radius: 12px; font-size: 13px; line-height: 1.5; max-width: 88%; }
+.msg-ai { background: var(--surface); border: 1px solid var(--border); color: var(--text); border-bottom-left-radius: 4px; }
+.msg-user { background: var(--green); color: white; border-bottom-right-radius: 4px; }
+.chat-input-row { display: flex; gap: 8px; }
+.chat-input-row input { flex: 1; }
+.btn-send { background: var(--green); border: none; border-radius: var(--radius); padding: 10px 14px; color: white; font-size: 13px; font-weight: 600; cursor: pointer; white-space: nowrap; font-family: var(--font); flex-shrink: 0; }
+.chips { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
+.chip { font-size: 12px; padding: 5px 11px; border-radius: 20px; border: 1px solid var(--border-md); background: var(--surface); cursor: pointer; color: var(--text-2); transition: background 0.1s; }
+.chip:hover { background: var(--bg); color: var(--text); }
+
+/* STATUS BAR (pwa) */
+.status-note { background: var(--green-light); color: var(--green-text); font-size: 12px; padding: 8px 14px; border-radius: var(--radius); margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
+.status-dot { width: 6px; height: 6px; background: var(--green); border-radius: 50%; flex-shrink: 0; }
+.dup-tag { background: var(--purple-light); color: var(--purple-text); font-size: 10px; padding: 1px 6px; border-radius: 4px; font-weight: 600; margin-left: 5px; }
+
+/* UPLOAD AREA */
+.upload-area { border: 1.5px dashed var(--border-md); border-radius: var(--radius-lg); padding: 20px; text-align: center; cursor: pointer; margin-bottom: 10px; transition: background 0.1s; }
+.upload-area:hover { background: var(--green-light); border-color: var(--green); }
+.upload-title { font-size: 13px; font-weight: 600; color: var(--text); }
+.upload-sub { font-size: 12px; color: var(--text-2); margin-top: 3px; }
+
+/* DIFF COLOR */
+.diff-pos { color: var(--green-text); font-weight: 600; font-family: var(--mono); font-size: 13px; min-width: 30px; text-align: right; }
+.diff-neg { color: var(--red-text); font-weight: 600; font-family: var(--mono); font-size: 13px; min-width: 30px; text-align: right; }
+.diff-ok { color: var(--text-3); font-size: 13px; min-width: 30px; text-align: right; }
+
+@media (max-width: 380px) {
+  .metrics-4 { grid-template-columns: repeat(2, 1fr); }
+  .met-n { font-size: 18px; }
+}
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <!-- TOP BAR -->
+  <div class="topbar">
+    <div class="logo">
+      <div class="logo-icon">
+        <svg viewBox="0 0 24 24"><path d="M17 8C8 10 5.9 16.17 3.82 21.34L5.71 22l1-2.3A4.49 4.49 0 0 0 8 20C19 20 22 3 22 3c-1 2-8 2-9 8"/></svg>
+      </div>
+      <div>
+        <div class="logo-text">Loja Verde</div>
+        <div class="logo-sub">Gestão de estoque</div>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <span class="notif-pill" id="notif-urgentes">3 urgentes</span>
+    </div>
+  </div>
+
+  <!-- CONTENT -->
+  <div class="content">
+
+    <!-- INÍCIO -->
+    <div id="s-inicio" class="screen active">
+      <div class="metrics metrics-4">
+        <div class="met"><div class="met-n" id="m-total">12</div><div class="met-l">produtos</div></div>
+        <div class="met"><div class="met-n" style="color:var(--red)" id="m-urg">3</div><div class="met-l">urgentes</div></div>
+        <div class="met"><div class="met-n" style="color:var(--amber)" id="m-enc">4</div><div class="met-l">encalhados</div></div>
+        <div class="met"><div class="met-n" style="color:var(--green)" id="m-conf">0</div><div class="met-l">conferidos</div></div>
+      </div>
+
+      <div class="status-note">
+        <div class="status-dot"></div>
+        <span>Dados salvos automaticamente no Google Sheets</span>
+      </div>
+
+      <div class="sec">Ação imediata</div>
+      <div class="alert alert-r"><div class="alert-head"><div><div class="a-title">Substrato Universal 5L</div><div class="a-sub">Acaba em ~3 dias · 6 un</div></div><span class="badge b-r">3 dias</span></div></div>
+      <div class="alert alert-r"><div class="alert-head"><div><div class="a-title">Terra Vegetal 10kg</div><div class="a-sub">Acaba em ~5 dias · 11 un</div></div><span class="badge b-r">5 dias</span></div></div>
+      <div class="alert alert-r"><div class="alert-head"><div><div class="a-title">Muda de Suculenta</div><div class="a-sub">Acaba em ~4 dias · 8 un</div></div><span class="badge b-r">4 dias</span></div></div>
+
+      <div class="sec">Acesso rápido</div>
+      <div class="quick-grid">
+        <div class="quick-card" onclick="showTab('conferencia',2)">
+          <div class="quick-icon" style="background:var(--green-light)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2.5"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></div>
+          <div class="quick-title">Conferir estoque</div>
+          <div class="quick-sub">Contar e corrigir</div>
+        </div>
+        <div class="quick-card" onclick="showTab('assistente',4)">
+          <div class="quick-icon" style="background:var(--purple-light)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--purple)" stroke-width="2.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div>
+          <div class="quick-title">Perguntar à IA</div>
+          <div class="quick-sub">O que comprar?</div>
+        </div>
+        <div class="quick-card" onclick="showTab('registros',3)">
+          <div class="quick-icon" style="background:var(--blue-light)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#185FA5" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div>
+          <div class="quick-title">Novo registro</div>
+          <div class="quick-sub">Entrada ou saída</div>
+        </div>
+        <div class="quick-card" onclick="showTab('alertas',1)">
+          <div class="quick-icon" style="background:var(--amber-light)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--amber)" stroke-width="2.5"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg></div>
+          <div class="quick-title">Alertas e previsões</div>
+          <div class="quick-sub">IA analisa tudo</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ALERTAS IA -->
+    <div id="s-alertas" class="screen">
+      <div class="metrics metrics-4">
+        <div class="met"><div class="met-n" style="color:var(--red)">3</div><div class="met-l">urgentes</div></div>
+        <div class="met"><div class="met-n" style="color:var(--amber)">5</div><div class="met-l">atenção</div></div>
+        <div class="met"><div class="met-n" style="color:var(--green)">9</div><div class="met-l">ok</div></div>
+        <div class="met"><div class="met-n" style="color:var(--purple)">4</div><div class="met-l">encalhados</div></div>
+      </div>
+
+      <div class="sec">Compre agora — menos de 5 dias</div>
+      <div class="alert alert-r"><div class="alert-head"><div><div class="a-title">Terra Vegetal 10kg</div><div class="a-sub">11 un · ~2,1/dia · 5 dias</div></div><span class="badge b-r">5 dias</span></div></div>
+      <div class="alert alert-r"><div class="alert-head"><div><div class="a-title">Substrato Universal 5L</div><div class="a-sub">6 un · ~1,8/dia · 3 dias</div></div><span class="badge b-r">3 dias</span></div></div>
+      <div class="alert alert-r"><div class="alert-head"><div><div class="a-title">Muda de Suculenta</div><div class="a-sub">8 un · alta saída · 4 dias</div></div><span class="badge b-r">4 dias</span></div></div>
+
+      <div class="sec">Atenção — até 14 dias</div>
+      <div class="alert alert-a"><div class="alert-head"><div><div class="a-title">Adubo Orgânico 1kg</div><div class="a-sub">24 un · ~1,9/dia · 12 dias</div></div><span class="badge b-a">12 dias</span></div></div>
+      <div class="alert alert-a"><div class="alert-head"><div><div class="a-title">Vaso de Barro M</div><div class="a-sub">15 un · ~1,1/dia · 13 dias</div></div><span class="badge b-a">13 dias</span></div></div>
+
+      <div class="sec">Encalhados — sem venda há 30+ dias</div>
+      <div class="card" style="padding:0 16px">
+        <div class="row"><div style="flex:1"><div class="row-name">Cachepô Cerâmica G</div><div class="row-sub">67 dias parado · 8 un · R$ 480 parado</div></div><span class="badge b-r">67 dias</span></div>
+        <div class="row"><div style="flex:1"><div class="row-name">Fertilizante Especial 500ml</div><div class="row-sub">54 dias parado · 12 un · R$ 360 parado</div></div><span class="badge b-r">54 dias</span></div>
+        <div class="row"><div style="flex:1"><div class="row-name">Suporte de Vaso Ferro P</div><div class="row-sub">41 dias parado · 5 un · R$ 225 parado</div></div><span class="badge b-a">41 dias</span></div>
+      </div>
+
+      <div class="sec">Previsão de esgotamento</div>
+      <div class="card" style="padding:0 16px" id="prev-list"></div>
+    </div>
+
+    <!-- CONFERÊNCIA -->
+    <div id="s-conferencia" class="screen">
+      <div class="metrics">
+        <div class="met"><div class="met-n" id="c-conf" style="color:var(--green)">0</div><div class="met-l">conferidos</div></div>
+        <div class="met"><div class="met-n" id="c-div" style="color:var(--red)">0</div><div class="met-l">divergências</div></div>
+      </div>
+      <div class="form-row"><input type="search" placeholder="Buscar produto..." id="busca" oninput="renderConf()" /></div>
+      <div class="card" style="padding:0 16px" id="conf-list"></div>
+
+      <div class="sec">Possíveis duplicados</div>
+      <div class="card" style="padding:0 16px">
+        <div class="row"><div style="flex:1"><div class="row-name">Terra preta 10kg<span class="dup-tag">duplicado?</span></div><div class="row-sub">parecido com "Terra Vegetal 10kg"</div></div><button class="btn-outline" style="font-size:11px;padding:4px 9px;flex-shrink:0">Agrupar</button></div>
+        <div class="row"><div style="flex:1"><div class="row-name">Vaso G Branco Plastico<span class="dup-tag">duplicado?</span></div><div class="row-sub">parecido com "Vaso Plástico G Branco"</div></div><button class="btn-outline" style="font-size:11px;padding:4px 9px;flex-shrink:0">Agrupar</button></div>
+      </div>
+      <button class="btn-outline" style="width:100%;margin-top:6px" onclick="exportarSheets('conferencia')">Exportar para planilha</button>
+    </div>
+
+    <!-- REGISTROS -->
+    <div id="s-registros" class="screen">
+      <div class="card">
+        <div class="card-title">Novo registro</div>
+        <div class="form-grid">
+          <div><label>Funcionário</label><select id="r-func"><option>João</option><option>Maria</option><option>Ana</option><option>Carlos</option></select></div>
+          <div><label>Tipo</label><select id="r-tipo"><option value="entrada">Entrada</option><option value="saida">Saída</option><option value="ajuste">Ajuste</option></select></div>
+        </div>
+        <div class="form-row"><label>Produto</label><input type="text" id="r-prod" placeholder="Nome ou código do produto" /></div>
+        <div class="form-grid">
+          <div><label>Quantidade</label><input type="number" id="r-qty" value="1" min="1" /></div>
+          <div><label>Observação</label><input type="text" id="r-obs" placeholder="Opcional" /></div>
+        </div>
+        <button class="btn-green" onclick="registrar()">Registrar e salvar</button>
+      </div>
+
+      <div class="sec">Registros do dia</div>
+      <div class="card" style="padding:0 16px" id="log-items">
+        <div class="row"><div style="flex:1"><div class="row-name">Terra Vegetal 10kg</div><div class="row-sub">João · 09:12 · Entrada</div></div><span class="badge b-g">+20</span></div>
+        <div class="row"><div style="flex:1"><div class="row-name">Vaso Plástico G</div><div class="row-sub">Maria · 10:45 · Saída</div></div><span class="badge b-r">-3</span></div>
+        <div class="row"><div style="flex:1"><div class="row-name">Adubo Orgânico</div><div class="row-sub">Carlos · 11:30 · Ajuste</div></div><span class="badge b-a">ajuste</span></div>
+      </div>
+      <button class="btn-outline" style="width:100%;margin-top:6px" onclick="exportarSheets('registros')">Exportar registros do dia</button>
+    </div>
+
+    <!-- ASSISTENTE IA -->
+    <div id="s-assistente" class="screen">
+      <div class="chips">
+        <span class="chip" onclick="ask('O que devo comprar essa semana?')">O que comprar?</span>
+        <span class="chip" onclick="ask('Qual produto mais vendeu?')">Mais vendido</span>
+        <span class="chip" onclick="ask('Quais estão encalhados?')">Encalhados</span>
+        <span class="chip" onclick="ask('Qual dá mais lucro?')">Mais lucrativo</span>
+      </div>
+      <div class="chat-area" id="chat-msgs">
+        <div class="msg-wrap-ai">
+          <div class="msg-label">Assistente</div>
+          <div class="msg msg-ai">Olá! Analisei os dados da loja. Posso responder sobre vendas, estoque, previsões e produtos encalhados. O que você quer saber?</div>
+        </div>
+      </div>
+      <div class="chat-input-row">
+        <input type="text" id="chat-in" placeholder="Pergunte sobre o estoque..." onkeydown="if(event.key==='Enter')enviar()" />
+        <button class="btn-send" onclick="enviar()">Enviar</button>
+      </div>
+      <p style="font-size:11px;color:var(--text-3);margin-top:6px;text-align:center">Respostas baseadas nos dados reais da loja</p>
+    </div>
+
+    <!-- DADOS -->
+    <div id="s-dados" class="screen">
+      <div class="sec" style="margin-top:0">Importar dados</div>
+      <div class="upload-area" onclick="alert('Conecte ao Bling via API ou importe o CSV exportado do sistema')">
+        <div class="upload-title">Produtos e estoque</div>
+        <div class="upload-sub">Exportar do Bling ou SysPDV · .xlsx ou .csv</div>
+      </div>
+      <div class="upload-area" onclick="alert('Importe o relatório de vendas por produto dos últimos 30/60/90 dias')">
+        <div class="upload-title">Relatório de vendas</div>
+        <div class="upload-sub">Últimos 30/60/90 dias · .xlsx ou .csv</div>
+      </div>
+
+      <div class="sec">Google Sheets</div>
+      <div class="card">
+        <div class="card-title">Planilha conectada</div>
+        <p style="font-size:13px;color:var(--text-2);margin-bottom:12px">Todos os registros, conferências e previsões são salvos automaticamente na planilha do Google.</p>
+        <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:14px">
+          <div style="display:flex;justify-content:space-between;align-items:center;font-size:13px;padding:7px 0;border-bottom:1px solid var(--border)"><span>Aba: Produtos</span><span class="badge b-g">12 itens</span></div>
+          <div style="display:flex;justify-content:space-between;align-items:center;font-size:13px;padding:7px 0;border-bottom:1px solid var(--border)"><span>Aba: Estoque atual</span><span class="badge b-g">12 itens</span></div>
+          <div style="display:flex;justify-content:space-between;align-items:center;font-size:13px;padding:7px 0;border-bottom:1px solid var(--border)"><span>Aba: Registros do dia</span><span class="badge b-g">3 hoje</span></div>
+          <div style="display:flex;justify-content:space-between;align-items:center;font-size:13px;padding:7px 0;border-bottom:1px solid var(--border)"><span>Aba: Divergências</span><span class="badge b-r">3 itens</span></div>
+          <div style="display:flex;justify-content:space-between;align-items:center;font-size:13px;padding:7px 0"><span>Aba: Previsões IA</span><span class="badge b-b">12 itens</span></div>
+        </div>
+        <button class="btn-green" onclick="alert('Abrindo Google Sheets...')">Abrir planilha no Google Sheets</button>
+      </div>
+    </div>
+
+  </div><!-- end content -->
+
+  <!-- BOTTOM NAV -->
+  <nav class="bottom-nav">
+    <button class="nav-item active" onclick="showTab('inicio',0)" id="nav-0">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      Início
+    </button>
+    <button class="nav-item" onclick="showTab('alertas',1)" id="nav-1" style="position:relative">
+      <div class="nav-item-wrap">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        <span class="nav-badge">3</span>
+      </div>
+      Alertas
+    </button>
+    <button class="nav-item" onclick="showTab('conferencia',2)" id="nav-2">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+      Conferência
+    </button>
+    <button class="nav-item" onclick="showTab('registros',3)" id="nav-3">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Registrar
+    </button>
+    <button class="nav-item" onclick="showTab('assistente',4)" id="nav-4">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      IA
+    </button>
+    <button class="nav-item" onclick="showTab('dados',5)" id="nav-5">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
+      Dados
+    </button>
+  </nav>
+
+</div><!-- end app -->
+
+<script>
+const prods = [
+  {cod:'001',nome:'Terra Vegetal 10kg',est:11,saida:2.1,cat:'substrato',contado:undefined},
+  {cod:'002',nome:'Vaso Plástico G Branco',est:9,saida:0.8,cat:'vasos',contado:undefined},
+  {cod:'003',nome:'Argila Expandida 5L',est:18,saida:0.7,cat:'substrato',contado:undefined},
+  {cod:'004',nome:'Adubo Orgânico 1kg',est:24,saida:1.9,cat:'adubo',contado:24},
+  {cod:'005',nome:'Vaso de Barro M',est:15,saida:1.1,cat:'vasos',contado:15},
+  {cod:'006',nome:'Substrato Universal 5L',est:6,saida:1.8,cat:'substrato',contado:undefined},
+  {cod:'007',nome:'Fertilizante Líquido',est:9,saida:0.5,cat:'adubo',contado:9},
+  {cod:'008',nome:'Pedra Decorativa kg',est:11,saida:0.4,cat:'decoração',contado:11},
+  {cod:'009',nome:'Regador 5L',est:6,saida:0.3,cat:'ferramentas',contado:undefined},
+  {cod:'010',nome:'Pá de Jardim',est:8,saida:0.3,cat:'ferramentas',contado:undefined},
+  {cod:'011',nome:'Muda de Suculenta',est:8,saida:2.0,cat:'plantas',contado:undefined},
+  {cod:'012',nome:'Cachepô Cerâmica P',est:13,saida:0.6,cat:'vasos',contado:undefined},
+];
+
+// ── SHEETS CONFIG ─────────────────────────────────────────────
+// Cole aqui a URL do seu Google Apps Script Web App depois de configurar
+const SHEETS_URL = '';
+// ─────────────────────────────────────────────────────────────
+
+function diasRestantes(est, saida) {
+  return saida > 0 ? Math.round(est / saida) : 999;
+}
+
+function showTab(id, idx) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+  document.getElementById('s-' + id).classList.add('active');
+  document.getElementById('nav-' + idx).classList.add('active');
+  window.scrollTo(0,0);
+}
+
+// ── CONFERÊNCIA ───────────────────────────────────────────────
+function renderConf() {
+  const q = (document.getElementById('busca').value || '').toLowerCase();
+  const fl = prods.filter(p => p.nome.toLowerCase().includes(q) || p.cod.includes(q));
+  let ok = 0, div = 0;
+  document.getElementById('conf-list').innerHTML = fl.map(p => {
+    const idx = prods.indexOf(p);
+    const ct = p.contado !== undefined ? p.contado : '';
+    const df = p.contado !== undefined ? p.contado - p.est : null;
+    if (p.contado !== undefined) { if (df === 0) ok++; else div++; }
+    const bdg = p.contado === undefined
+      ? `<span class="badge b-a">pendente</span>`
+      : df === 0 ? `<span class="badge b-g">ok</span>`
+      : `<span class="badge b-r">diverge</span>`;
+    const dfEl = df !== null
+      ? `<span class="${df > 0 ? 'diff-pos' : df < 0 ? 'diff-neg' : 'diff-ok'}">${df > 0 ? '+' : ''}${df}</span>`
+      : `<span class="diff-ok">—</span>`;
+    return `<div class="row">
+      <div style="flex:1;min-width:0">
+        <div class="row-name">${p.nome}</div>
+        <div class="row-sub">${p.cod} · sist: ${p.est}</div>
+      </div>
+      <div class="qty-wrap" style="margin:0 6px">
+        <button class="qty-btn" onclick="adj(${idx},-1)">−</button>
+        <input class="qty-in" type="number" value="${ct}" min="0" onchange="setQ(${idx},this.value)" />
+        <button class="qty-btn" onclick="adj(${idx},1)">+</button>
+      </div>
+      ${dfEl}
+      <div style="min-width:58px;text-align:right">${bdg}</div>
+    </div>`;
+  }).join('');
+  document.getElementById('c-conf').textContent = ok;
+  document.getElementById('c-div').textContent = div;
+  document.getElementById('m-conf').textContent = ok;
+}
+
+function adj(i, d) {
+  const p = prods[i];
+  const c = p.contado !== undefined ? p.contado : p.est;
+  p.contado = Math.max(0, c + d);
+  renderConf();
+  salvarSheets('conferencia', { produto: p.nome, sistema: p.est, contado: p.contado, diferenca: p.contado - p.est });
+}
+
+function setQ(i, v) {
+  prods[i].contado = Math.max(0, parseInt(v) || 0);
+  renderConf();
+  const p = prods[i];
+  salvarSheets('conferencia', { produto: p.nome, sistema: p.est, contado: p.contado, diferenca: p.contado - p.est });
+}
+
+// ── REGISTROS ────────────────────────────────────────────────
+function registrar() {
+  const func = document.getElementById('r-func').value;
+  const prod = document.getElementById('r-prod').value.trim();
+  const tipo = document.getElementById('r-tipo').value;
+  const qty = parseInt(document.getElementById('r-qty').value) || 1;
+  const obs = document.getElementById('r-obs').value.trim();
+  if (!prod) { alert('Preencha o produto'); return; }
+
+  const now = new Date();
+  const hora = now.getHours().toString().padStart(2,'0') + ':' + now.getMinutes().toString().padStart(2,'0');
+  const cls = tipo === 'entrada' ? 'b-g' : tipo === 'saida' ? 'b-r' : 'b-a';
+  const lbl = tipo === 'entrada' ? `+${qty}` : tipo === 'saida' ? `-${qty}` : 'ajuste';
+
+  const li = document.getElementById('log-items');
+  const el = document.createElement('div');
+  el.className = 'row';
+  el.innerHTML = `<div style="flex:1;min-width:0"><div class="row-name">${prod}</div><div class="row-sub">${func} · ${hora} · ${tipo.charAt(0).toUpperCase()+tipo.slice(1)}</div></div><span class="badge ${cls}">${lbl}</span>`;
+  li.prepend(el);
+
+  // Salva no Google Sheets
+  salvarSheets('registro', { data: now.toLocaleDateString('pt-BR'), hora, funcionario: func, produto: prod, tipo, quantidade: qty, observacao: obs });
+
+  document.getElementById('r-prod').value = '';
+  document.getElementById('r-qty').value = '1';
+  document.getElementById('r-obs').value = '';
+}
+
+// ── PREVISÕES ────────────────────────────────────────────────
+function renderPrev() {
+  const sorted = [...prods].sort((a, b) => diasRestantes(a.est, a.saida) - diasRestantes(b.est, b.saida));
+  document.getElementById('prev-list').innerHTML = sorted.map(p => {
+    const d = diasRestantes(p.est, p.saida);
+    const pct = Math.min(100, Math.round((p.est / (p.saida * 30)) * 100));
+    const cor = d <= 5 ? '#E24B4A' : d <= 14 ? '#EF9F27' : '#1D9E75';
+    const cls = d <= 5 ? 'b-r' : d <= 14 ? 'b-a' : 'b-g';
+    return `<div class="row">
+      <div style="flex:1;min-width:0">
+        <div class="row-name">${p.nome}</div>
+        <div style="display:flex;align-items:center;gap:6px;margin-top:4px">
+          <div class="bar-wrap"><div class="bar-fill" style="width:${pct}%;background:${cor}"></div></div>
+        </div>
+      </div>
+      <span class="badge ${cls}" style="margin-left:8px">${d >= 999 ? '30+ dias' : '~' + d + ' dias'}</span>
+    </div>`;
+  }).join('');
+}
+
+// ── GOOGLE SHEETS ─────────────────────────────────────────────
+async function salvarSheets(aba, dados) {
+  if (!SHEETS_URL) return; // sem URL configurada, ignora silenciosamente
+  try {
+    await fetch(SHEETS_URL, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ aba, dados })
+    });
+  } catch (e) {
+    console.warn('Sheets offline, dado salvo localmente', e);
+  }
+}
+
+function exportarSheets(tipo) {
+  if (!SHEETS_URL) {
+    alert('Configure a URL do Google Sheets no arquivo para exportar. Veja o guia de instalação.');
+    return;
+  }
+  alert('Exportando para o Google Sheets...');
+}
+
+// ── ASSISTENTE IA ─────────────────────────────────────────────
+function ask(msg) {
+  document.getElementById('chat-in').value = msg;
+  enviar();
+}
+
+async function enviar() {
+  const inp = document.getElementById('chat-in');
+  const msg = inp.value.trim();
+  if (!msg) return;
+  inp.value = '';
+
+  const chat = document.getElementById('chat-msgs');
+  const ud = document.createElement('div');
+  ud.className = 'msg-wrap-user';
+  ud.innerHTML = `<div class="msg-label" style="text-align:right">Você</div><div class="msg msg-user">${msg}</div>`;
+  chat.appendChild(ud);
+
+  const ld = document.createElement('div');
+  ld.className = 'msg-wrap-ai';
+  ld.innerHTML = `<div class="msg-label">Assistente</div><div class="msg msg-ai" id="ai-r" style="color:var(--text-2)">Analisando dados da loja...</div>`;
+  chat.appendChild(ld);
+  chat.scrollTop = chat.scrollHeight;
+
+  const info = prods.map(p => {
+    const d = diasRestantes(p.est, p.saida);
+    return `- ${p.nome}: ${p.est} un, saída ~${p.saida}/dia, acaba em ~${d >= 999 ? '30+ dias' : d + ' dias'}`;
+  }).join('\n');
+
+  try {
+    const r = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        system: `Você é assistente de gestão de estoque de uma loja de plantas e jardinagem no Brasil. Responda em português, direto e simples, máximo 4 frases. Use linguagem acessível para o dono da loja.\n\nEstoque atual:\n${info}\n\nProdutos encalhados: Cachepô Cerâmica G (67 dias), Fertilizante Especial (54 dias), Suporte Vaso Ferro (41 dias).`,
+        messages: [{ role: 'user', content: msg }]
+      })
+    });
+    const data = await r.json();
+    const txt = data.content?.map(i => i.text || '').join('');
+    document.getElementById('ai-r').textContent = txt || 'Não consegui processar, tente de novo.';
+  } catch (e) {
+    document.getElementById('ai-r').textContent = 'Erro ao conectar com a IA.';
+  }
+  chat.scrollTop = chat.scrollHeight;
+}
+
+// ── INIT ──────────────────────────────────────────────────────
+renderConf();
+renderPrev();
+</script>
+</body>
+</html>
