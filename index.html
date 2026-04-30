@@ -515,7 +515,9 @@ function showTab(id, idx) {
   document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
   document.getElementById('s-' + id).classList.add('active');
   document.getElementById('nav-' + idx).classList.add('active');
-  window.scrollTo(0,0);
+  window.scrollTo(0, 0);
+  if (id === 'inicio') { updateHome(); }
+  if (id === 'alertas') { renderAlertas(); renderPrev(); }
 }
 
 // ── CONFERÊNCIA ───────────────────────────────────────────────
